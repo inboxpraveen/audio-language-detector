@@ -1,3 +1,5 @@
+import os
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -25,7 +27,7 @@ def create_or_check_directory(input_directory: str = ""):
 
 
 def fancy_print(msg: str=""):
-    terminal_size = os.get_terminal_size().columns
+    terminal_size = 80
     difference = terminal_size - 4
     if msg:
         print()

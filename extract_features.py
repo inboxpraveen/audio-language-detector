@@ -1,3 +1,4 @@
+import numpy as np
 
 def generate_fb_and_mfcc(signal, sample_rate):
     """
