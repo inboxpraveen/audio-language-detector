@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Detection App</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Welcome to the Language Detection App</h1>
+    <ul>
+        <li><a href="{{ url_for('train') }}">Train</a></li>
+        <li><a href="{{ url_for('test_single') }}">Test on Single File</a></li>
+        <li><a href="{{ url_for('test_directory') }}">Test on Directory</a></li>
+    </ul>
+</body>
+</html>

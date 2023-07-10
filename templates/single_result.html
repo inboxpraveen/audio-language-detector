@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Detection App - Single File Result</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+    <h1>Single File Result</h1>
+    <ul id="predictions">
+        {% for prediction in predictions %}
+            <li>{{ prediction }}</li>
+        {% endfor %}
+    </ul>
+    <div id="audio-container">
+        <audio id="audio" controls></audio>
+        <div id="labels"></div>
+    </div>
+</body>
+</html>

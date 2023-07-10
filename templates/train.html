@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Detection App - Train</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Train the Model</h1>
+    <form action="{{ url_for('train') }}" method="POST">
+        <label for="folder">Enter Folder Directory:</label>
+        <input type="text" name="folder" id="folder" required>
+        <input type="submit" value="Train">
+    </form>
+</body>
+</html>

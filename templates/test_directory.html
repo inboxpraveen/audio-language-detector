@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Detection App - Test on Directory</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Test on Directory</h1>
+    <form action="{{ url_for('test_directory') }}" method="POST">
+        <label for="folder">Enter Directory Path:</label>
+        <input type="text" name="folder" id="folder" required>
+        <input type="submit" value="Test">
+    </form>
+</body>
+</html>
