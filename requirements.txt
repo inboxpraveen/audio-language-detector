@@ -1,4 +1,6 @@
 flask
 numpy
 soundfile
-tensorflow==2.7
+sox
+speechbrain
+librosa

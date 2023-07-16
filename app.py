@@ -15,7 +15,7 @@ ALLOWED_EXTENSIONS = {'mpga', 'wav', 'mp3', 'opus', 'wma'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
-language_id = EncoderClassifier.from_hparams(source="./model/", savedir="uploads")
+language_id = EncoderClassifier.from_hparams(source="./model/")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -39,7 +39,7 @@ def test_single():
             print("file: ",file)
             print("file.filename: ",file.filename)
 
-            segments = generate_cropped_segments(file.filename)
+            segments = generate_cropped_segments(filepath)
             print(segments)
             for start, segment in enumerate(segments):
                 outputs = language_id.classify_batch(segment)
@@ -56,7 +56,7 @@ def test_single():
 def test_directory():
     if request.method == 'POST':
         folder = request.form['folder']
-        output_path = os.path.join(app.config['OUTPUT_FOLDER'], folder)
+        output_path = os.path.join("./output/", folder)
         os.makedirs(output_path, exist_ok=True)
         # Perform predictions on each audio file in the directory and save results to the output folder
         # Your prediction and saving logic here

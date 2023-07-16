@@ -25,28 +25,40 @@ def create_or_check_directory(input_directory: str = ""):
         print(f"{bcolors.FAIL}[ERROR] Unable to create `{input_directory}`. Please verify input formal parameter.{bcolors.ENDC}")
         return False
 
+import torch
+import librosa
 
-def generate_cropped_segments(input_file, segment_duration=3.0):
-    # Load the input WAV file
-    waveform, sample_rate = torchaudio.load(input_file)
+def preprocess_audio(filepath, chunk_duration=3):
+    # Load the audio file and get its sample rate
+    waveform, sample_rate = torchaudio.load(filepath)
 
-    # Calculate the number of samples corresponding to the desired segment duration
-    segment_samples = int(segment_duration * sample_rate)
+    # Convert to mono (single channel)
+    if waveform.size(0) > 1:
+        waveform = torch.mean(waveform, dim=0, keepdim=True)
 
-    # Calculate the number of segments in the audio file
-    num_segments = waveform.size(1) // segment_samples
+    # Resample to 16kHz if the sample rate is different
+    target_sample_rate = 16000
+    if sample_rate != target_sample_rate:
+        waveform = librosa.resample(waveform.numpy(), orig_sr=sample_rate, target_sr=target_sample_rate)
+        waveform = torch.tensor(waveform)
 
-    # Generator to yield each cropped audio segment
-    for i in range(num_segments):
-        start_idx = i * segment_samples
-        end_idx = start_idx + segment_samples
-        yield (waveform[:, start_idx:end_idx], i*3, (i+1)*3)
+    # Convert to 16-bit depth
+    waveform = (waveform * 32767).to(torch.int16)
 
-    # If there are any remaining samples after the last full segment, yield the last segment.
-    remaining_samples = waveform.size(1) % segment_samples
-    if remaining_samples > 0:
-        start_idx = num_segments * segment_samples
-        yield (waveform[:, start_idx:], i*3, (i+1)*3)
+    # Calculate the number of samples in a chunk
+    chunk_samples = int(chunk_duration * target_sample_rate)
+
+    # Generate chunks of 3 seconds (or less for the last chunk)
+    num_chunks = waveform.size(1) // chunk_samples
+    for i in range(num_chunks):
+        start = i * chunk_samples
+        end = (i + 1) * chunk_samples
+        yield waveform[:, start:end]
+
+    # If there's a last incomplete chunk, yield it as well
+    last_chunk_start = num_chunks * chunk_samples
+    if last_chunk_start < waveform.size(1):
+        yield waveform[:, last_chunk_start:]
 
 
 
