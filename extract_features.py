@@ -41,7 +41,6 @@ def generate_fb_and_mfcc(signal, sample_rate):
     Output: Log Mel Spectrogram -> Matrix vector of shape (40,1201)
         CHECK "audio_language_detection\scripts\Reference_Images\2. Output Log Mel Spectrogram.jpg" FILE
 
-
     """
     # Pre-Emphasis
     pre_emphasis = 0.97
