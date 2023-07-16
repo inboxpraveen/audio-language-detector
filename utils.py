@@ -68,5 +68,5 @@ def find_latest_file(input_directory, ends_with="",is_dir=False):
         all_files = [x for x in all_files if x.endswith(ends_with)]
     elif is_dir:
         all_files = [x for x in all_files if os.path.isdir(os.path.join(input_directory,x))]
-    sorted(all_files)
-    return all_files[-1]
+
+    return sorted(all_files)[-1]

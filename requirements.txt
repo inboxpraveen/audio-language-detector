@@ -1,0 +1,4 @@
+flask
+numpy
+soundfile
+tensorflow==2.7
