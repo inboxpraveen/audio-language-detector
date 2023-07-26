@@ -2,24 +2,15 @@ import os
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 
-from speechbrain.pretrained import EncoderClassifier
-
-from utils import preprocess_audio
-
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'outputs'
 ALLOWED_EXTENSIONS = {'mpga', 'wav', 'mp3', 'opus', 'wma'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
-
-language_id = EncoderClassifier.from_hparams(source="./model/")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 @app.route('/')
 def home():
@@ -28,16 +19,17 @@ def home():
 
 @app.route('/test_single', methods=['GET', 'POST'])
 def test_single():
+
     if request.method == 'POST':
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+        audio_file = request.files['audio_file']
+        if audio_file and allowed_file(audio_file.filename):
+            filename = secure_filename(audio_file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+            audio_file.save(filepath)
 
             predictions = []
-            print("file: ",file)
-            print("file.filename: ",filepath)
+            print("file: ",audio_file)
+            print("file_path: ",filepath)
 
             # segments = preprocess_audio(filepath)
             # print(segments)
