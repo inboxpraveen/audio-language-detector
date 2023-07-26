@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 
 from speechbrain.pretrained import EncoderClassifier
 
-from utils import generate_cropped_segments
+from utils import preprocess_audio
 
 app = Flask(__name__)
 
@@ -37,15 +37,17 @@ def test_single():
 
             predictions = []
             print("file: ",file)
-            print("file.filename: ",file.filename)
+            print("file.filename: ",filepath)
 
-            segments = generate_cropped_segments(filepath)
-            print(segments)
-            for start, segment in enumerate(segments):
-                outputs = language_id.classify_batch(segment)
-                predictions.append((start*3, (start+1)*3, outputs[3][0]))
-                print("predictions[start]: ", predictions[start])
-                
+            # segments = preprocess_audio(filepath)
+            # print(segments)
+            # for start, segment in enumerate(segments):
+            #     print("segment: ",segment)
+            #     print("start: ",start)
+            #     outputs = language_id.classify_batch(language_id.load_audio(segment))
+            #     predictions.append((start*3, (start+1)*3, outputs[3][0]))
+            #     print("predictions[start]: ", predictions[start])
+            predictions.append(language_id.load_audio("./uploads/Recording.mp3"))
             print(predictions)
             return render_template('single_result.html', predictions=predictions)
 
