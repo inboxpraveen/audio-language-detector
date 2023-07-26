@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Language Detection App</title>
+    <title>Language Detection App Demo</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Language Detection App</h1>
+    <div>
+        <h1 class="title">Language Detection Web Application Demo</h1>
+        <div class="single-test">
+            <form action="/test_single" method="post" enctype="multipart/form-data">
+                <input type="file" name="audio_file" accept="audio/*" />
+                <input type="submit" value="Upload" />
+            </form>
+        </div>
+    </div>
     <ul>
         <li><a href="{{ url_for('test_single') }}">Test on Single File</a></li>
-        <li><a href="{{ url_for('test_directory') }}">Test on Directory</a></li>
+        <!-- <li><a href="{{ url_for('test_directory') }}">Test on Directory</a></li> -->
     </ul>
 </body>
 </html>
