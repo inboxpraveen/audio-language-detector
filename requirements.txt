@@ -1,6 +1,5 @@
-flask
-numpy
-soundfile
-sox
-speechbrain
-librosa
+Flask==2.3.2
+numpy==1.24.3
+wave
+tensorflow==2.13.0
+scikit-learn

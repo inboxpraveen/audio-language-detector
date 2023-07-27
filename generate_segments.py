@@ -1,6 +1,5 @@
 import subprocess
 import wave
-import os
 import math
 import numpy as np
 
@@ -8,6 +7,7 @@ def convert_audio_to_wav(input_audio_path, output_wav_path):
     # Use Sox to convert audio to WAV with the specified settings
     command = f'sox "{input_audio_path}" -c 1 -r 16000 -b 16 "{output_wav_path}"'
     subprocess.run(command, shell=True)
+
 
 def generate_segments(wav_path, segment_duration=3):
     # Open the WAV file
