@@ -1,29 +1,11 @@
-import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-import soundfile as sf
 from tensorflow.keras.models import load_model as LOAD_AUDIO_LANGUAGE_DETECTION_MODEL
-import time
-
 
 class audio_language_detection:
 
-    def __init__(self,audio_file_path :str ="",audio_duration : float=0, audio_model_path :str = ""):
-        self.FILE_EXTENSION = ""
-        self.AUDIO_FILE_NAME = ""
-        if audio_file_path:
-            self.AUDIO_FILE_PATH = audio_file_path
-            self.FILE_EXTENSION = audio_file_path.split(".")[-1]
-            self.AUDIO_FILE_NAME = audio_file_path.split("/")[-1].split(".")[0]
-        else:
-            self.AUDIO_FILE_PATH = "NO AUDIO PATH FOUND"
+    def __init__(self, audio_model_path :str = ""):
 
-        self.AUDIO_DURATION = audio_duration
-        self.TEMPORARY_OUTPUT_PATH = "/tmp/"
-        self.AUDIO_SEGMENT_SIZE = 3 ## seconds. *DO NOT CHANGE IT*
-        self.MINIMUM_EXPECTED_AUDIO_LENGTH = 3 ## seconds
-        self.MINIMUM_AUDIO_SEGMENTS = 1 ## windows
-        self.TIMEOUT = 3 ## seconds to wait before returning error and trying to checking if file exists
         self.HINDI = "Hindi"
         self.ENGLISH = "English"
         self.PATH_TO_AUDIO_LANGUAGE_MODEL = audio_model_path ## needs to come through env variables.
@@ -126,162 +108,26 @@ class audio_language_detection:
         return filter_banks
 
     
-    def crop_and_make_predictions(self):
-
-        result_dictionary = {
-            self.ENGLISH : 0,
-            self.HINDI : 0
-        }
-
+    def crop_and_make_predictions(self, audio_np):
+        
         sc = StandardScaler()
         model = LOAD_AUDIO_LANGUAGE_DETECTION_MODEL(self.PATH_TO_AUDIO_LANGUAGE_MODEL)
-        print(f"====== LOADED AUDIO LANGUAGE DETECTION MODEL ========")
-
-        if self.AUDIO_DURATION > self.MINIMUM_EXPECTED_AUDIO_LENGTH:
-
-            if self.AUDIO_FILE_NAME != "NO AUDIO PATH FOUND" and self.FILE_EXTENSION == "wav":
-                ## then we can form 4 segments since 60 < // 12 >= 5..
-                for multiplier in range(self.MINIMUM_AUDIO_SEGMENTS):
-                    starttime_with_multiplier = multiplier * self.AUDIO_SEGMENT_SIZE
-                    endtime_with_multiplier = (multiplier + 1) * self.AUDIO_SEGMENT_SIZE
-                    new_filepath = self.TEMPORARY_OUTPUT_PATH + "{0}_{1}_{2}.wav".format(
-                        self.AUDIO_FILE_NAME,starttime_with_multiplier,endtime_with_multiplier
-                    )
-                    try:
-                        os.popen("ffmpeg -ss {0} -i {1} -t {2} -c copy {3} -y".format(
-                            starttime_with_multiplier,self.AUDIO_FILE_PATH,self.AUDIO_SEGMENT_SIZE,new_filepath
-                        )).read()
-                    except:
-                        ## should not proceed and return error as we are not able to crop audio so model will not be able to make predictions
-                        print(f"====== SOMETHING WENT WRONG WHILE CREATING 12 SECONDS CHUNKS ========")
-                        return "ERROR"
-
-                    ## make predictions on the cropped file
-                    if os.path.isfile(new_filepath):
-                        # if the cropped file is successfully formed, then make predictions and update the dictionary
-                        flac, samplerate = sf.read(new_filepath)
-                        MFCC = self.generate_fb_and_mfcc(flac, samplerate)
-                        MFCC_sc = sc.fit_transform(MFCC)
-                        try:
-                            MFCC_sc_array = np.array(MFCC_sc).reshape(-1,298,40,1)
-                            prediction = np.argmax(model.predict(MFCC_sc_array)[0])
-                            if prediction == 0:
-                                result_dictionary[self.ENGLISH] = result_dictionary.get(self.ENGLISH,0) + 1
-                            else:
-                                result_dictionary[self.HINDI] = result_dictionary.get(self.HINDI,0) + 1
-                            os.popen("rm -rf {0}".format(new_filepath))
-                            time.sleep(0.5)
-                        except Exception as E:
-                            print(f"====== SKIPPING CURRENT SEGMENT DUE TO THE ERROR: {str(E)} ========")
-                            pass
-                    else:
-                        while not os.path.isfile(new_filepath):
-                            self.TIMEOUT -= 1
-                            time.sleep(1)
-                            if self.TIMEOUT == 0: ## so that we dont fall in endless loop
-                                self.TIMEOUT = 10 ## restore default back original value before breaking
-                                break
-                        if os.path.isfile(new_filepath):
-                            # if the cropped file is successfully formed, then make predictions and update the dictionary
-                            flac, samplerate = sf.read(new_filepath)
-                            MFCC = self.generate_fb_and_mfcc(flac, samplerate)
-                            MFCC_sc = sc.fit_transform(MFCC)
-                            try:
-                                MFCC_sc_array = np.array(MFCC_sc).reshape(-1,1201,40,1)
-                                prediction = np.argmax(model.predict(MFCC_sc_array)[0])
-                                if prediction == 0:
-                                    result_dictionary[self.ENGLISH] = result_dictionary.get(self.ENGLISH,0) + 1
-                                else:
-                                    result_dictionary[self.HINDI] = result_dictionary.get(self.HINDI,0) + 1
-                                os.popen("rm -rf {0}".format(new_filepath))
-                                time.sleep(0.5)
-                            except Exception as E:
-                                print(f"====== SKIPPING CURRENT SEGMENT DUE TO THE ERROR: {str(E)} ========")
-                                pass
-                print(f"====== FINAL PREDICTION FOR THE AUDIO {self.AUDIO_FILE_NAME} is : {str(result_dictionary)} ========")
-                return [KEY for KEY in result_dictionary.keys() if result_dictionary[KEY] == max(result_dictionary.values())][0]
+        
+        MFCC = self.generate_fb_and_mfcc(audio_np, 16000)
+        MFCC_sc = sc.fit_transform(MFCC)
+        MFCC_sc_array = np.array(MFCC_sc).reshape(-1,298,40,1)
+        prediction = np.argmax(model.predict(MFCC_sc_array)[0])
+        if prediction == 0:
+            return self.ENGLISH
         else:
-            try:
-                total_number_of_segments_possible = int(self.AUDIO_DURATION // self.AUDIO_SEGMENT_SIZE)
-            except Exception as E:
-                ## taking default number of segments if any divide by exception occurs
-                total_number_of_segments_possible = 0
-            print(f"====== AUDIO SMALLER THAN 60 SECONDS, SO USING SMALLER CHUNKS ========")
-            if total_number_of_segments_possible >= 3:
-                if self.AUDIO_FILE_NAME != "NO AUDIO PATH FOUND" and self.FILE_EXTENSION == "wav":
-                    ## then we can form 4 segments since 60 < // 12 >= 5..
-                    for multiplier in range(total_number_of_segments_possible):
-                        starttime_with_multiplier = multiplier * self.AUDIO_SEGMENT_SIZE
-                        endtime_with_multiplier = (multiplier + 1) * self.AUDIO_SEGMENT_SIZE
-                        new_filepath = self.TEMPORARY_OUTPUT_PATH + "{0}_{1}_{2}.wav".format(
-                            self.AUDIO_FILE_NAME,starttime_with_multiplier,endtime_with_multiplier
-                        )
-                        try:
-                            os.popen("ffmpeg -ss {0} -i {1} -t {2} -c copy {3} -y".format(
-                                starttime_with_multiplier,self.AUDIO_FILE_PATH,self.AUDIO_SEGMENT_SIZE,new_filepath
-                            )).read()
-                        except:
-                            ## should not proceed and return error as we are not able to crop audio so model will not be able to make predictions
-                            print(f"====== SOMETHING WENT WRONG WHILE CREATING 12 SECONDS CHUNKS ========")
-                            return "ERROR"
-                        ## make predictions on the cropped file
-                        if os.path.isfile(new_filepath):
-                            # if the cropped file is successfully formed, then make predictions and update the dictionary
-                            flac, samplerate = sf.read(new_filepath)
-                            MFCC = self.generate_fb_and_mfcc(flac, samplerate)
-                            MFCC_sc = sc.fit_transform(MFCC)
-                            try:
-                                MFCC_sc_array = np.array(MFCC_sc).reshape(-1,298,40,1)
-                                prediction = np.argmax(model.predict(MFCC_sc_array)[0])
-                                if prediction == 0:
-                                    result_dictionary[self.ENGLISH] = result_dictionary.get(self.ENGLISH,0) + 1
-                                else:
-                                    result_dictionary[self.HINDI] = result_dictionary.get(self.HINDI,0) + 1
-                                os.popen("rm -rf {0}".format(new_filepath))
-                                time.sleep(0.5)
-                            except Exception as E:
-                                print(f"====== SKIPPING CURRENT SEGMENT DUE TO THE ERROR: {str(E)} ========")
-                                pass
-                        else:
-                            while not os.path.isfile(new_filepath):
-                                self.TIMEOUT -= 1
-                                time.sleep(1)
-                                if self.TIMEOUT == 0: ## so that we dont fall in endless loop
-                                    self.TIMEOUT = 10 ## restore default back original value before breaking
-                                    break
-                            if os.path.isfile(new_filepath):
-                                # if the cropped file is successfully formed, then make predictions and update the dictionary
-                                flac, samplerate = sf.read(new_filepath)
-                                MFCC = self.generate_fb_and_mfcc(flac, samplerate)
-                                MFCC_sc = sc.fit_transform(MFCC)
-                                try:
-                                    MFCC_sc_array = np.array(MFCC_sc).reshape(-1,298,40,1)
-                                    prediction = np.argmax(model.predict(MFCC_sc_array)[0])
-                                    if prediction == 0:
-                                        result_dictionary[self.ENGLISH] = result_dictionary.get(self.ENGLISH,0) + 1
-                                    else:
-                                        result_dictionary[self.HINDI] = result_dictionary.get(self.HINDI,0) + 1
-                                    os.popen("rm -rf {0}".format(new_filepath))
-                                    time.sleep(0.5)
-                                except Exception as E:
-                                    print(f"====== SKIPPING CURRENT SEGMENT DUE TO THE ERROR: {str(E)} ========")
-                                    pass
-                    print(f"====== FINAL PREDICTION FOR THE AUDIO {self.AUDIO_FILE_NAME} is : {str(result_dictionary)} ========")
-                    return [KEY for KEY in result_dictionary.keys() if result_dictionary[KEY] == max(result_dictionary.values())][0]
-            else:
-                print("NO REASON TO DETECT AUDIO SINCE THE AUDIO LENGTH IS TOO SMALL.")
-                return "NO REASON TO DETECT AUDIO SINCE THE AUDIO LENGTH IS TOO SMALL."
+            return self.HINDI
 
 
-def MAKE_LANGUAGE_PREDICTION(audio_wav_path, duration_of_audio_in_seconds, model_path):
+def MAKE_LANGUAGE_PREDICTION(audio_np_array, model_path):
     try:
-        print(f"\n\n====== LOGGING AUDIO LOGS FOR THE FOLLOWING : {str(audio_wav_path)} ========")
-        aduio_language_detection_obj = audio_language_detection(audio_wav_path,duration_of_audio_in_seconds,model_path)
-        predicted_language = aduio_language_detection_obj.crop_and_make_predictions()
-        print(f"====== FINAL RESULT FOR BOTH LANGUAGES - '{str(predicted_language)}' ========")
-        if predicted_language in ["HINDI","ENGLISH"]:
-            return predicted_language
-        else:
-            return ""
-    except:
+        aduio_language_detection_obj = audio_language_detection(model_path)
+        predicted_language = aduio_language_detection_obj.crop_and_make_predictions(audio_np_array)
+        return predicted_language
+    except Exception as e:
+        print("Something went wrong with prediction: ",e)
         return ""

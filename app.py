@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
+from generate_segments import convert_audio_to_wav, generate_segments
+from predict import MAKE_LANGUAGE_PREDICTION
 
 app = Flask(__name__)
 
@@ -9,8 +11,10 @@ ALLOWED_EXTENSIONS = {'mpga', 'wav', 'mp3', 'opus', 'wma'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/')
 def home():
@@ -26,20 +30,17 @@ def test_single():
             filename = secure_filename(audio_file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             audio_file.save(filepath)
-
+            
+            convert_audio_to_wav(filepath,"./tmp/temp.wav")
+            
             predictions = []
             print("file: ",audio_file)
             print("file_path: ",filepath)
+            
+            for i, segment in enumerate(generate_segments("./tmp/temp.wav")):
+                language_prediction = MAKE_LANGUAGE_PREDICTION(segment)
+                predictions.append((i*3,i+1*3, language_prediction))
 
-            # segments = preprocess_audio(filepath)
-            # print(segments)
-            # for start, segment in enumerate(segments):
-            #     print("segment: ",segment)
-            #     print("start: ",start)
-            #     outputs = language_id.classify_batch(language_id.load_audio(segment))
-            #     predictions.append((start*3, (start+1)*3, outputs[3][0]))
-            #     print("predictions[start]: ", predictions[start])
-            predictions.append(language_id.load_audio("./uploads/Recording.mp3"))
             print(predictions)
             return render_template('single_result.html', predictions=predictions)
 
