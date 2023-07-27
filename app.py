@@ -38,7 +38,7 @@ def test_single():
             print("file_path: ",filepath)
             
             for i, segment in enumerate(generate_segments("./tmp/temp.wav")):
-                language_prediction = MAKE_LANGUAGE_PREDICTION(segment)
+                language_prediction = MAKE_LANGUAGE_PREDICTION(segment,"./model/model.h5")
                 predictions.append((i*3,i+1*3, language_prediction))
 
             print(predictions)
