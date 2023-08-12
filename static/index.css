@@ -1,34 +1,87 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-}
-
-h1 {
-    color: #333;
-}
-
-ul {
-    list-style-type: none;
+/* Reset some default styles for better consistency */
+* {
+    margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
-li {
-    margin-bottom: 10px;
+.main-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-form {
+
+.title {
+    font-size: 3rem;
     margin-bottom: 20px;
 }
 
-input[type="text"], input[type="file"] {
-    margin-right: 10px;
+/* Adjust the form's margin and style the submit button */
+.single-test form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 3rem;
 }
 
-#audio-container {
-    margin-top: 20px;
+.single-test input[type="file"] {
+    margin-bottom: 10px;
 }
 
-#labels {
-    margin-top: 10px;
-    font-weight: bold;
+.single-test input[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+
+/* Mobile */
+@media (max-width: 480px) {
+    .title {
+        font-size: 18px;
+    }
+
+    .single-test input[type="submit"] {
+        padding: 8px 16px;
+    }
+}
+
+/* Extra small devices */
+@media (min-width: 481px) and (max-width: 767px) {
+    .title {
+        font-size: 2.5rem;
+    }
+}
+
+/* Small tablets */
+@media (min-width: 768px) and (max-width: 991px) {
+    .title {
+        font-size: 3rem;
+    }
+}
+
+/* Large tablets and laptops */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .title {
+        font-size: 26px;
+    }
+}
+
+/* Desktops */
+@media (min-width: 1200px) and (max-width: 1919px) {
+    .title {
+        font-size: 28px;
+    }
+}
+
+/* Extra large devices */
+@media (min-width: 1920px) {
+    .title {
+        font-size: 30px;
+    }
 }
