@@ -39,10 +39,11 @@ def test_single():
             
             for i, segment in enumerate(generate_segments("./tmp/temp.wav")):
                 language_prediction = MAKE_LANGUAGE_PREDICTION(segment,"./model/model.h5")
-                predictions.append((i*3,i+1*3, language_prediction))
+                predictions.append((i*3,(i+1)*3, language_prediction))
+                return render_template('single_result.html', predictions=predictions)
 
-            print(predictions)
-            return render_template('single_result.html', predictions=predictions)
+            # print(predictions)
+            # return render_template('single_result.html', predictions=predictions)
 
     return render_template('test_single.html')
 
